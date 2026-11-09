@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Búho Spirits - Bóveda de la Suerte</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #050505; color: #f3f4f6; }
+        .cinzel { font-family: 'Cinzel', serif; }
+        .neon-glow-gold { box-shadow: 0 0 25px rgba(234, 179, 8, 0.4); }
+        .neon-text-gold { text-shadow: 0 0 10px rgba(234, 179, 8, 0.7); }
+        .chest { transition: transform 0.6s ease; cursor: pointer; }
+        .chest:hover { transform: scale(1.05); }
+        .chest.opened { transform: rotateX(20deg) scale(1.1); filter: drop-shadow(0 0 35px rgba(234, 179, 8, 1)); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-black">
+    <header class="w-full py-6 px-6 border-b border-yellow-500/25 flex justify-between items-center bg-black/40">
+        <div class="flex items-center space-x-3">
+            <!-- 🦉 Hacé 3 toques rápidos aquí para abrir el panel secreto -->
+            <span id="secret-trigger" class="text-2xl cursor-pointer select-none">🦉</span>
+            <h1 class="cinzel text-xl font-extrabold text-yellow-400 neon-text-gold">BÚHO SPIRITS</h1>
+        </div>
+        <div class="text-xs uppercase px-3 py-1 rounded-full border border-yellow-500/40 text-yellow-400 bg-yellow-500/10">Casino VIP</div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-center px-4 py-8 max-w-xl mx-auto w-full text-center">
+        
+        <!-- PANEL DE ADMIN OCULTO (Protegido por PIN) -->
+        <div id="admin-panel" class="w-full hidden bg-zinc-950 border border-yellow-500/60 rounded-2xl p-6 mb-6 text-left shadow-2xl">
+            <h3 class="cinzel text-xs font-bold text-yellow-400 mb-2">🔐 PANEL DE ADMINISTRADOR</h3>
+            <p class="text-zinc-400 text-xs mb-3">Creá un código de un solo uso para tu cliente:</p>
+            <input type="text" id="admin-new-code" placeholder="EJ: PEDRO22" class="w-full bg-black border border-yellow-500/40 rounded-xl px-3 py-2.5 text-sm text-yellow-300 uppercase mb-2 focus:outline-none focus:border-yellow-400">
+            <button onclick="adminCreateCode()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold py-2.5 rounded-xl text-xs cinzel transition-all">GUARDAR CÓDIGO ➕</button>
+            <p id="admin-msg" class="text-emerald-400 text-xs mt-2 text-center font-bold hidden"></p>
+            <hr class="border-zinc-800 my-4">
+            <button onclick="closeAdminPanel()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold py-2 rounded-xl text-xs">Cerrar Panel</button>
+        </div>
+
+        <!-- PASO 1: Ingreso de código del cliente -->
+        <div id="step-token" class="w-full bg-zinc-900/90 border border-yellow-500/40 rounded-2xl p-6 sm:p-8 neon-glow-gold">
+            <div class="text-4xl mb-3">🗝️</div>
+            <h2 class="cinzel text-2xl font-bold text-yellow-400 mb-2 neon-text-gold">BÓVEDA SECRETA</h2>
+            <p class="text-zinc-400 text-sm mb-6">Ingresá el código único que te pasamos por WhatsApp:</p>
+            <input type="text" id="token-input" placeholder="EJ: COMA2026" 
+                class="w-full bg-black/80 border border-yellow-500/50 rounded-xl px-4 py-3 text-center text-xl font-bold text-yellow-300 uppercase mb-4 focus:outline-none focus:border-yellow-400">
+            <button onclick="verifyToken()" 
+                class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-extrabold py-3.5 rounded-xl cinzel tracking-wider shadow-lg">
+                ABRIR BÓVEDA 🔓
+            </button>
+            <p id="error-msg" class="text-red-400 text-xs mt-3 hidden font-bold"></p>
+        </div>
+
+        <!-- PASO 2: Selección de Cofres -->
+        <div id="step-game" class="w-full hidden">
+            <h2 class="cinzel text-2xl font-bold text-yellow-400 mb-2 neon-text-gold">¡ACCESO CONCEDIDO!</h2>
+            <p class="text-zinc-300 text-sm mb-8">Elegí uno de los 3 cofres sagrados:</p>
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div onclick="openChest(1)"><div id="chest-1" class="chest text-6xl bg-zinc-900 border border-yellow-500/50 rounded-2xl p-4">📦</div></div>
+                <div onclick="openChest(2)"><div id="chest-2" class="chest text-6xl bg-zinc-900 border border-yellow-500/50 rounded-2xl p-4">📦</div></div>
+                <div onclick="openChest(3)"><div id="chest-3" class="chest text-6xl bg-zinc-900 border border-yellow-500/50 rounded-2xl p-4">📦</div></div>
+            </div>
+        </div>
+
+        <!-- PASO 3: Resultado -->
+        <div id="step-result" class="w-full hidden bg-zinc-900/95 border-2 border-yellow-400 rounded-2xl p-8 neon-glow-gold">
+            <div class="text-5xl mb-4" id="result-emoji">💎</div>
+            <p id="result-text" class="cinzel text-2xl font-extrabold text-yellow-400 mb-6 neon-text-gold"></p>
+            <p id="result-desc" class="text-xs text-zinc-300 font-semibold mb-6">📸 Sacá captura y mandala al WhatsApp para acreditar tu premio.</p>
+            <a id="whatsapp-btn" href="#" target="_blank" 
+                class="inline-block w-full bg-emerald-600 text-white font-extrabold py-3.5 rounded-xl cinzel text-center">
+                RECLAMAR POR WHATSAPP 📲
+            </a>
+        </div>
+    </main>
+
+    <footer class="text-center text-xs text-zinc-600 py-4">Búho Spirits © 2026</footer>
+
+    <script>
+        // PIN DE ADMINISTRADOR (Podés cambiar '1234' por el número que quieras)
+        const ADMIN_PIN = "1234";
+
+        function getDB() {
+            let db = JSON.parse(localStorage.getItem('buho_tokens'));
+            if (!db) {
+                db = { 
+                    "COMA2026": { used: false }, 
+                    "BUHO10": { used: false },
+                    "TEST": { used: false }
+                };
+                localStorage.setItem('buho_tokens', JSON.stringify(db));
+            }
+            return db;
+        }
+
+        const possibleResults = [
+            { text: "¡GANASTE UN 10% EXTRA EN TU RECARGA! 💸", emoji: "🔥", win: true },
+            { text: "¡GANASTE UN 5% EXTRA EN TU RECARGA! ✨", emoji: "🪙", win: true },
+            { text: "¡NO TUVISTE SUERTE! 😢", emoji: "❌", win: false },
+            { text: "¡GANASTE UN 5% EXTRA EN TU RECARGA! ✨", emoji: "🪙", win: true }
+        ];
+
+        let currentToken = "";
+
+        // Sistema de 3 toques rápidos en el búho 🦉 para abrir el panel secreto
+        let clickCount = 0;
+        let clickTimer = null;
+
+        document.getElementById('secret-trigger').addEventListener('click', function() {
+            clickCount++;
+            if (clickTimer) clearTimeout(clickTimer);
+
+            if (clickCount === 3) {
+                clickCount = 0;
+                let enteredPin = prompt("🔑 Ingrese PIN de Administrador:");
+                if (enteredPin === ADMIN_PIN) {
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                } else if (enteredPin !== null) {
+                    alert("❌ PIN incorrecto.");
+                }
+            } else {
+                clickTimer = setTimeout(() => { clickCount = 0; }, 800);
+            }
+        });
+
+        function closeAdminPanel() {
+            document.getElementById('admin-panel').classList.add('hidden');
+        }
+
+        function adminCreateCode() {
+            const val = document.getElementById('admin-new-code').value.trim().toUpperCase();
+            const msg = document.getElementById('admin-msg');
+            if (!val) return;
+
+            let db = getDB();
+            db[val] = { used: false };
+            localStorage.setItem('buho_tokens', JSON.stringify(db));
+
+            document.getElementById('admin-new-code').value = "";
+            msg.classList.remove('hidden');
+            msg.innerText = `¡Código [${val}] creado con éxito!`;
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        }
+
+        function verifyToken() {
+            const val = document.getElementById('token-input').value.trim().toUpperCase();
+            const err = document.getElementById('error-msg');
+            let db = getDB();
+
+            if (!val) {
+                err.innerText = "Por favor ingresá un código.";
+                err.classList.remove('hidden');
+                return;
+            }
+
+            if (!db[val]) {
+                err.innerText = "❌ Código incorrecto o inexistente.";
+                err.classList.remove('hidden');
+                return;
+            }
+
+            if (db[val].used) {
+                err.innerText = "⚠️ Este código ya fue utilizado y expiró.";
+                err.classList.remove('hidden');
+                return;
+            }
+
+            currentToken = val;
+            err.classList.add('hidden');
+            document.getElementById('step-token').classList.add('hidden');
+            document.getElementById('step-game').classList.remove('hidden');
+        }
+
+        function openChest(num) {
+            let db = getDB();
+            db[currentToken].used = true; // QUEMA EL CÓDIGO AL INSTANTE
+            localStorage.setItem('buho_tokens', JSON.stringify(db));
+
+            const outcome = possibleResults[Math.floor(Math.random() * possibleResults.length)];
+
+            document.getElementById(`chest-${num}`).classList.add('opened');
+            document.getElementById(`chest-${num}`).innerText = outcome.win ? '👑' : '💀';
+
+            setTimeout(() => {
+                document.getElementById('step-game').classList.add('hidden');
+                document.getElementById('result-emoji').innerText = outcome.emoji;
+                document.getElementById('result-text').innerText = outcome.text;
+
+                if (!outcome.win) {
+                    document.getElementById('result-desc').innerText = "¡Lástima! Podés hacer otra recarga para conseguir un nuevo intento.";
+                    document.getElementById('whatsapp-btn').innerText = "VOLVER AL CHAT 📲";
+                }
+
+                const waMessage = encodeURIComponent(`Hola! Canjeé mi código ${currentToken} y saqué: ${outcome.text}`);
+                document.getElementById('whatsapp-btn').href = `https://wa.me/?text=${waMessage}`;
+
+                document.getElementById('step-result').classList.remove('hidden');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
